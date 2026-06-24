@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: car-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: carapp
+  template:
+    metadata:
+      labels:
+        app: carapp
+    spec:
+      containers:
+      - name: car-container
+        image: 725740880862.dkr.ecr.ap-south-1.amazonaws.com/docker-car:latest
+        ports:
+        - containerPort: 80
