@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Configure AWS Credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -20,15 +22,41 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Debug - Verify AWS Identity
+      - name: Verify AWS Identity
+        run: |
+          echo "===== AWS Identity ====="
+          aws sts get-caller-identity
+
+      # Debug - Verify S3 Access
+      - name: Verify S3 Access
+        run: |
+          echo "===== Listing Buckets ====="
+          aws s3 ls
+
+      # Debug - Verify Bucket
+      - name: Verify Bucket
+        run: |
+          echo "===== Bucket Name ====="
+          echo "${{ secrets.S3_BUCKET }}"
+          aws s3api head-bucket --bucket "${{ secrets.S3_BUCKET }}"
+
+      # Upload Website
       - name: Upload Website to S3
         run: |
-          aws s3 sync . s3://${{ secrets.S3_BUCKET }} \
-          --delete \
-          --exclude ".git/*" \
-          --exclude ".github/*"
+          aws s3 sync ./ s3://${{ secrets.S3_BUCKET }}/ \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*"
 
+      # Create CloudFront Invalidation
       - name: Invalidate CloudFront Cache
         run: |
           aws cloudfront create-invalidation \
-          --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-          --paths "/*"
+            --distribution-id "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"
+
+      # Success Message
+      - name: Deployment Successful
+        run: |
+          echo "Website deployed successfully."
